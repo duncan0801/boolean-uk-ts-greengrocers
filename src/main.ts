@@ -69,10 +69,11 @@ const state: State = {
 	cart: [],
 };
 
-const storeList  = document.querySelector(".store--item-list");
-const cartList  = document.querySelector(".cart--item-list");
+// finding tore and cart list items for appending of items
+const storeList = document.querySelector(".store--item-list");
+const cartList = document.querySelector(".cart--item-list");
 
-
+//RENDER FUNCITONS
 function renderStoreListItem(itemId: string, itemName: string) {
 	const storeListItem = document.createElement("li");
 	storeListItem.innerHTML = `
@@ -92,49 +93,116 @@ function renderStore() {
 		renderStoreListItem(product.id, product.name);
 	}
 }
-function addItemToCart(itemId: string) {
-	const newCartItem: CartItem = {
-		id: itemId,
-		quantity: 1,
-	};
-	state.cart.push(newCartItem);
-    renderCart()
-	console.log(state.cart);
-}
-// function addToCart() {}
-renderStore();
-
 function renderCartItem(cartItem: CartItem) {
+	const targetItem = state.products.find(
+		(product) => product.id === cartItem.id
+	);
 
-    const targetItem = state.products.find((product) => product.id === cartItem.id)
-    
-    let newCartLiEL = document.createElement("li")
+	let newCartLiEL = document.createElement("li");
 
-    let cartIconImgEl = document.createElement("img")
-    cartIconImgEl.setAttribute("src", `../assets/icons/${targetItem && targetItem.id}.svg` )
-    cartIconImgEl.setAttribute("alt", `${targetItem && targetItem.name}`)
-  
-    let nameEl = document.createElement("p")
-    nameEl.innerText = targetItem && targetItem.name
-  
-    let removeButton = document.createElement("button")
-    removeButton.setAttribute("class", "quantity-btn remove-btn center")
-  
-    let quantityEl = document.createElement("span")
-    quantityEl.innerText = cartItem.quantity
-  
-    let addButton = document.createElement("button")
-    addButton.setAttribute("class", "quantity-btn add-btn center")
-  
-    newCartLiEL.append(cartIconImgEl, nameEl, removeButton, quantityEl, addButton)
-    cartList && cartList.append(newCartLiEL)
+	let cartIconImgEl = document.createElement("img");
+	cartIconImgEl.setAttribute(
+		"src",
+		`../assets/icons/${targetItem && targetItem.id}.svg`
+	);
+	cartIconImgEl.setAttribute("alt", `${targetItem && targetItem.name}`);
+
+	let nameEl = document.createElement("p");
+	nameEl.innerText = targetItem && targetItem.name;
+
+	let removeButton = document.createElement("button");
+	removeButton.setAttribute("class", "quantity-btn remove-btn center");
+	removeButton.innerText = "-";
+	removeButton.addEventListener("click", () =>
+		removeItemFromCart(cartItem.id)
+	);
+
+	let quantityEl = document.createElement("span");
+	quantityEl.innerText = cartItem.quantity;
+
+	let addButton = document.createElement("button");
+	addButton.setAttribute("class", "quantity-btn add-btn center");
+	addButton.innerText = "+";
+	addButton.addEventListener("click", () => addItemToCart(cartItem.id));
+
+	newCartLiEL.append(
+		cartIconImgEl,
+		nameEl,
+		removeButton,
+		quantityEl,
+		addButton
+	);
+	cartList && cartList.append(newCartLiEL);
 }
 function renderCart() {
-    cartList.innerHTML = ""
+	if (cartList) cartList.innerHTML = "";
 
-    for (let cartItem of state.cart) {
-        renderCartItem(cartItem)
-    }
+	for (let cartItem of state.cart) {
+		renderCartItem(cartItem);
+	}
 }
 
-console.log(state);
+//ACTION FUNCTIONS
+function addItemToCart(itemId: string) {
+	// if item is already in cart then increase that item quanity
+	const foundItem: CartItem | undefined = state.cart.find(
+		(cartItem) => cartItem.id === itemId
+	);
+
+	if (foundItem) {
+		state.cart = state.cart.map((cartItem) => {
+			if (cartItem === foundItem) {
+				return {
+					id: cartItem.id,
+					quantity: ++cartItem.quantity,
+				};
+			}
+			return cartItem;
+		});
+	} else {
+		const newCartItem: CartItem = {
+			id: itemId,
+			quantity: 1,
+		};
+		state.cart.push(newCartItem);
+	}
+	calculateTotal();
+	renderCart();
+	console.log(state.cart);
+}
+function removeItemFromCart(itemId: string) {
+	const targetItem = state.cart.find((cartItem) => cartItem.id === itemId);
+	const targetItemIndex = state.cart.findIndex(
+		(cartItem) => cartItem.id === itemId
+	);
+
+	if (targetItem?.quantity === 1) {
+		state.cart.splice(targetItemIndex, 1);
+	} else {
+		state.cart = state.cart.map((cartItem) => {
+			if (cartItem.id === itemId) {
+				return {
+					id: cartItem.id,
+					quantity: --cartItem.quantity,
+				};
+			}
+			return cartItem;
+		});
+	}
+	calculateTotal();
+	renderCart();
+}
+function calculateTotal() {
+	const totalEl = document.querySelector(".total-number");
+
+	let total: number = 0;
+	state.cart.map((cartItem) => {
+		const targetProduct = state.products.find(
+			(product) => product.id === cartItem.id
+		);
+		total += cartItem.quantity * targetProduct.price;
+	});
+
+	totalEl.innerText = `£${total.toFixed(2)}`;
+}
+renderStore();
