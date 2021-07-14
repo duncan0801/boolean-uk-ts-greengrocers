@@ -2,20 +2,20 @@ import "./style.css";
 import "../styles/reset.css";
 import "../styles/index.css";
 
-//Type Interfaces
-interface StoreItem {
+//Types
+type StoreItem = {
 	id: string;
 	name: string;
 	price: number;
-}
-interface State {
+};
+type State = {
 	products: StoreItem[];
 	cart: CartItem[];
-}
-interface CartItem {
+};
+type CartItem = {
 	id: string;
 	quantity: number;
-}
+};
 
 // State object
 const state: State = {
@@ -69,28 +69,30 @@ const state: State = {
 	cart: [],
 };
 
-// finding tore and cart list items for appending of items
+// finding store and cart list items for appending of items
 const storeList = document.querySelector(".store--item-list");
 const cartList = document.querySelector(".cart--item-list");
 
 //RENDER FUNCITONS
-function renderStoreListItem(itemId: string, itemName: string) {
+function renderStoreListItem(storeItem: StoreItem) {
 	const storeListItem = document.createElement("li");
 	storeListItem.innerHTML = `
     <div class="store--item-icon">
-      <img src="../assets/icons/${itemId}.svg" alt="${itemName}">
+      <img src="../assets/icons/${storeItem.id}.svg" alt="${storeItem.name}">
     </div>
   `;
 	const addToCartButton = document.createElement("button");
 	addToCartButton.innerText = "ADD TO CART";
-	addToCartButton.addEventListener("click", () => addItemToCart(itemId));
+	addToCartButton.addEventListener("click", () =>
+		addItemToCart(storeItem.id)
+	);
 
 	storeListItem.append(addToCartButton);
 	storeList && storeList.append(storeListItem);
 }
 function renderStore() {
 	for (let product of state.products) {
-		renderStoreListItem(product.id, product.name);
+		renderStoreListItem(product);
 	}
 }
 function renderCartItem(cartItem: CartItem) {
@@ -100,15 +102,17 @@ function renderCartItem(cartItem: CartItem) {
 
 	let newCartLiEL = document.createElement("li");
 
-	let cartIconImgEl = document.createElement("img");
-	cartIconImgEl.setAttribute(
-		"src",
-		`../assets/icons/${targetItem && targetItem.id}.svg`
-	);
-	cartIconImgEl.setAttribute("alt", `${targetItem && targetItem.name}`);
+	if (targetItem) {
+		let cartIconImgEl = document.createElement("img");
+		cartIconImgEl.setAttribute(
+			"src",
+			`../assets/icons/${targetItem.id}.svg`
+		);
+		cartIconImgEl.setAttribute("alt", `${targetItem.name}`);
 
-	let nameEl = document.createElement("p");
-	nameEl.innerText = targetItem && targetItem.name;
+		let nameEl = document.createElement("p");
+		nameEl.innerText = targetItem.name;
+	}
 
 	let removeButton = document.createElement("button");
 	removeButton.setAttribute("class", "quantity-btn remove-btn center");
